@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { storage } from '@/lib/storage';
 
+type Params = {
+  params: {
+    id: string;
+  }
+};
+
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: Params
 ) {
   try {
-    const patientId = parseInt(context.params.id);
+    const patientId = parseInt(params.id);
     
     if (isNaN(patientId)) {
       return NextResponse.json({ message: 'Invalid patient ID' }, { status: 400 });
@@ -23,7 +29,7 @@ export async function GET(
     
     return NextResponse.json(medicalRecords);
   } catch (error) {
-    console.error(`Error fetching medical records for patient ${context.params.id}:`, error);
+    console.error(`Error fetching medical records for patient ${params.id}:`, error);
     return NextResponse.json({ message: 'Error fetching medical records' }, { status: 500 });
   }
 }

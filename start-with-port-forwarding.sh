@@ -1,3 +1,5 @@
 #!/bin/bash
-# Run the port forwarding script to ensure port 5000 is available immediately
+
+# Start the port forwarding script in the background
+echo "Starting port forwarding service..."
 node port-forwarding.js

@@ -1,5 +1,6 @@
-// Simple HTTP server that listens on port 5000 and forwards to the Next.js app
+// Advanced HTTP/WebSocket proxy that forwards traffic from port 5000 to the Next.js server
 const http = require('http');
+const httpProxy = require('http-proxy');
 const { spawn } = require('child_process');
 
 // Port configuration
@@ -22,18 +23,47 @@ nextApp.stderr.on('data', (data) => {
   console.error(`Next.js Error: ${data.toString().trim()}`);
 });
 
-// Create the port forwarding server
-const server = http.createServer((req, res) => {
-  // Create options for proxying the request
-  const options = {
-    hostname: 'localhost',
-    port: NEXT_PORT,
-    path: req.url,
-    method: req.method,
-    headers: req.headers
-  };
+// Create a proxy server with custom socket handling for WebSockets
+const proxy = httpProxy.createProxyServer({
+  target: {
+    host: 'localhost',
+    port: NEXT_PORT
+  },
+  ws: true, // Enable WebSocket proxying
+  xfwd: true // Add x-forwarded headers
+});
 
-  // Immediately respond with a status message if accessing the root
+// Handle proxy errors
+proxy.on('error', (err, req, res) => {
+  console.error('Proxy Error:', err);
+  
+  if (!res.headersSent) {
+    res.writeHead(503, { 'Content-Type': 'text/html' });
+    res.end(`
+      <html>
+        <head>
+          <title>Medical Consultation App - Loading</title>
+          <meta http-equiv="refresh" content="2">
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            .loader { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 2s linear infinite; margin: 20px auto; }
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+          </style>
+        </head>
+        <body>
+          <h1>Medical Consultation App</h1>
+          <p>Next.js application is starting up, please wait...</p>
+          <div class="loader"></div>
+          <p>This page will refresh automatically.</p>
+        </body>
+      </html>
+    `);
+  }
+});
+
+// Create the HTTP server to handle proxy requests
+const server = http.createServer((req, res) => {
+  // Special case for root path - display a loading page
   if (req.url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(`
@@ -58,61 +88,33 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Special case for the health check endpoint
+  // Special case for health check
   if (req.url === '/api/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       status: 'ok', 
       message: 'Port forwarding is active and working',
-      nextjs_status: 'starting',
+      nextjs_status: 'running',
       timestamp: new Date().toISOString()
     }));
     return;
   }
 
-  // Forward the request to the Next.js server
-  try {
-    const proxy = http.request(options, (proxyRes) => {
-      res.writeHead(proxyRes.statusCode, proxyRes.headers);
-      proxyRes.pipe(res, { end: true });
-    });
+  // Forward all other requests to Next.js
+  proxy.web(req, res);
+});
 
-    proxy.on('error', () => {
-      // If Next.js is not ready yet, send a loading message
-      res.writeHead(503, { 'Content-Type': 'text/html' });
-      res.end(`
-        <html>
-          <head>
-            <title>Medical Consultation App - Loading</title>
-            <meta http-equiv="refresh" content="2">
-            <style>
-              body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-              .loader { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 2s linear infinite; margin: 20px auto; }
-              @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            </style>
-          </head>
-          <body>
-            <h1>Medical Consultation App</h1>
-            <p>Next.js application is starting up, please wait...</p>
-            <div class="loader"></div>
-            <p>This page will refresh automatically.</p>
-          </body>
-        </html>
-      `);
-    });
-
-    req.pipe(proxy, { end: true });
-  } catch (error) {
-    console.error('Error forwarding request:', error);
-    res.writeHead(500, { 'Content-Type': 'text/plain' });
-    res.end('Internal Server Error');
-  }
+// Set up WebSocket handling
+server.on('upgrade', (req, socket, head) => {
+  // Handle WebSocket upgrade requests (needed for video calls)
+  proxy.ws(req, socket, head);
 });
 
 // Start the server
 server.listen(LISTEN_PORT, '0.0.0.0', () => {
   console.log(`Port forwarding server running on http://0.0.0.0:${LISTEN_PORT}`);
   console.log(`Forwarding requests to http://localhost:${NEXT_PORT}`);
+  console.log(`WebSocket forwarding enabled`);
 });
 
 // Handle process termination
@@ -120,7 +122,16 @@ process.on('SIGINT', () => {
   console.log('Shutting down servers...');
   
   // Kill the Next.js process and its children
-  process.kill(-nextApp.pid);
+  if (nextApp.pid) {
+    try {
+      process.kill(-nextApp.pid);
+    } catch (err) {
+      console.error('Error killing Next.js process:', err);
+    }
+  }
+  
+  // Close the proxy server
+  proxy.close();
   
   // Close the forwarding server
   server.close(() => {
