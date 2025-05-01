@@ -12,6 +12,7 @@ import {
 } from "@shared/schema";
 import { and, asc, between, desc, eq, gte, ilike, inArray, lt, sql } from "drizzle-orm";
 import { format, parse, startOfDay, endOfDay, startOfMonth, endOfMonth } from "date-fns";
+import moment from 'moment';
 import bcrypt from 'bcryptjs';
 
 export const storage = {
@@ -110,24 +111,27 @@ export const storage = {
     if (filters) {
       // Date-based filtering
       if (filters.date) {
-        const date = parse(filters.date, 'yyyy-MM-dd', new Date());
-        query = query.where(
-          between(
-            appointments.date, 
-            startOfDay(date).toISOString(), 
-            endOfDay(date).toISOString()
-          )
-        );
-      } else if (filters.month) {
-        const [year, month] = filters.month.split('-').map(Number);
-        const startDate = startOfMonth(new Date(year, month - 1));
-        const endDate = endOfMonth(startDate);
+        const date = moment(filters.date, 'YYYY-MM-DD');
+        const startOfDayStr = date.startOf('day').format();
+        const endOfDayStr = date.endOf('day').format();
         
         query = query.where(
           between(
             appointments.date, 
-            startDate.toISOString(), 
-            endDate.toISOString()
+            startOfDayStr,
+            endOfDayStr
+          )
+        );
+      } else if (filters.month) {
+        const [year, month] = filters.month.split('-').map(Number);
+        const startDate = moment().year(year).month(month - 1).startOf('month');
+        const endDate = moment().year(year).month(month - 1).endOf('month');
+        
+        query = query.where(
+          between(
+            appointments.date, 
+            startDate.format(),
+            endDate.format()
           )
         );
       }
@@ -226,13 +230,11 @@ export const storage = {
     
     try {
       // Get booked appointments for the date
-      const dateObj = parse(date, 'yyyy-MM-dd', new Date());
       const bookedAppointments = await this.getAppointments({ date });
       
       // Get booked time slots
       const bookedTimeSlots = bookedAppointments.map(appointment => {
-        const appointmentDate = new Date(appointment.date);
-        return format(appointmentDate, 'HH:mm');
+        return moment(appointment.date).format('HH:mm');
       });
       
       // Filter out booked slots
