@@ -5,6 +5,9 @@ process.env.PORT = '5000';
 // Log the port configuration
 console.log('Next.js configured to run on PORT:', process.env.PORT);
 
+// Force listening on all interfaces (0.0.0.0) at port 5000
+process.env.HOST = '0.0.0.0';
+
 const nextConfig = {
   // Configure Next.js for optimizations
   reactStrictMode: false,
@@ -26,8 +29,7 @@ const nextConfig = {
   experimental: {
     serverActions: {
       allowedOrigins: ['localhost:3000', 'localhost:5000', '0.0.0.0:5000', '*.replit.dev', '*.repl.co'],
-    },
-    allowedDevOrigins: ['*.replit.dev', '*.repl.co', 'localhost:3000', 'localhost:5000', '0.0.0.0:5000'],
+    }
   },
   
   // Environment variables
