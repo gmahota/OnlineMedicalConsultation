@@ -1,211 +1,246 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { Calendar, MessageSquare, Clock, Users, FileText, Shield } from 'lucide-react';
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-100">
+      {/* Header/Navigation */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
-              <span className="text-primary-600 font-bold text-xl">MedConsult</span>
+              <span className="text-xl font-bold text-primary-600">MedConsult</span>
             </div>
-            <div className="flex space-x-4">
+            <div className="flex gap-4">
               <Link 
-                href="/routes/login" 
-                className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                href="/login" 
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-700 bg-primary-50 hover:bg-primary-100"
               >
-                Sign In
+                Log in
+              </Link>
+              <Link 
+                href="/login?tab=register" 
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
+              >
+                Register
               </Link>
             </div>
           </div>
         </div>
       </header>
-      
-      <main className="flex-1">
-        <div className="bg-gradient-to-b from-primary-50 to-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-            <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-              <div className="lg:col-span-6">
-                <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
-                  Virtual healthcare, real results
-                </h1>
-                <p className="mt-6 text-xl text-gray-500">
-                  Connect with healthcare professionals from the comfort of your home. 
-                  Get medical consultations, prescriptions, and follow-ups without the wait.
-                </p>
-                <div className="mt-10 flex space-x-4">
-                  <Link
-                    href="/routes/login"
-                    className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                  >
-                    Get Started
-                  </Link>
-                  <Link
-                    href="#how-it-works"
-                    className="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                  >
-                    Learn More
-                  </Link>
-                </div>
-              </div>
-              <div className="mt-16 sm:mt-24 lg:mt-0 lg:col-span-6">
-                <div className="bg-white sm:max-w-md sm:w-full sm:mx-auto sm:rounded-lg sm:overflow-hidden shadow-lg">
-                  <div className="p-8">
-                    <div className="rounded-lg overflow-hidden">
-                      <img
-                        src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&h=400&q=80"
-                        alt="Doctor with patient on video call"
-                        className="w-full h-auto"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Features Section */}
-        <div className="py-24 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="lg:text-center">
-              <h2 className="text-base text-primary-600 font-semibold tracking-wide uppercase">Features</h2>
-              <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-                Everything you need for virtual healthcare
+
+      {/* Hero Section */}
+      <div className="py-16 sm:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900">
+                Professional Healthcare<br />
+                <span className="text-primary-600">Anytime, Anywhere</span>
+              </h1>
+              <p className="text-lg text-gray-600 max-w-2xl">
+                MedConsult connects you with licensed doctors for video consultations, 
+                prescription services, and continuous care from the comfort of your home.
               </p>
-              <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-                Our telemedicine platform provides all the tools for effective remote medical consultations.
-              </p>
-            </div>
-            
-            <div className="mt-16">
-              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="pt-6">
-                  <div className="flow-root bg-gray-50 rounded-lg px-6 pb-8">
-                    <div className="-mt-6">
-                      <div>
-                        <span className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-md shadow-lg">
-                          <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                        </span>
-                      </div>
-                      <h3 className="mt-8 text-lg font-medium text-gray-900">Video Consultations</h3>
-                      <p className="mt-5 text-base text-gray-500">
-                        Connect face-to-face with doctors through secure, high-quality video calls from any device.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="pt-6">
-                  <div className="flow-root bg-gray-50 rounded-lg px-6 pb-8">
-                    <div className="-mt-6">
-                      <div>
-                        <span className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-md shadow-lg">
-                          <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </span>
-                      </div>
-                      <h3 className="mt-8 text-lg font-medium text-gray-900">Appointment Scheduling</h3>
-                      <p className="mt-5 text-base text-gray-500">
-                        Book appointments with specialists at times that work for your schedule, with instant confirmation.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="pt-6">
-                  <div className="flow-root bg-gray-50 rounded-lg px-6 pb-8">
-                    <div className="-mt-6">
-                      <div>
-                        <span className="inline-flex items-center justify-center p-3 bg-primary-500 rounded-md shadow-lg">
-                          <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                          </svg>
-                        </span>
-                      </div>
-                      <h3 className="mt-8 text-lg font-medium text-gray-900">Medical History</h3>
-                      <p className="mt-5 text-base text-gray-500">
-                        Access your complete medical history, prescriptions, and test results in one secure place.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-      
-      <footer className="bg-gray-800">
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">Company</h3>
-              <ul className="mt-4 space-y-4">
-                <li>
-                  <a href="#" className="text-base text-gray-300 hover:text-white">About</a>
-                </li>
-                <li>
-                  <a href="#" className="text-base text-gray-300 hover:text-white">Careers</a>
-                </li>
-                <li>
-                  <a href="#" className="text-base text-gray-300 hover:text-white">Blog</a>
-                </li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">Support</h3>
-              <ul className="mt-4 space-y-4">
-                <li>
-                  <a href="#" className="text-base text-gray-300 hover:text-white">Help Center</a>
-                </li>
-                <li>
-                  <a href="#" className="text-base text-gray-300 hover:text-white">Contact Us</a>
-                </li>
-                <li>
-                  <a href="#" className="text-base text-gray-300 hover:text-white">Privacy</a>
-                </li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">Legal</h3>
-              <ul className="mt-4 space-y-4">
-                <li>
-                  <a href="#" className="text-base text-gray-300 hover:text-white">Privacy Policy</a>
-                </li>
-                <li>
-                  <a href="#" className="text-base text-gray-300 hover:text-white">Terms of Service</a>
-                </li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-sm font-semibold text-gray-400 tracking-wider uppercase">Subscribe</h3>
-              <p className="mt-4 text-base text-gray-300">Get the latest news and updates.</p>
-              <div className="mt-4 flex">
-                <input
-                  type="email"
-                  placeholder="Email address"
-                  className="min-w-0 px-4 py-2 text-base text-gray-900 placeholder-gray-500 bg-white border border-transparent rounded-md"
-                />
-                <button
-                  className="ml-3 px-4 py-2 bg-primary-600 text-white font-medium rounded-md"
+              <div className="flex gap-4">
+                <Link 
+                  href="/login?tab=register" 
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
                 >
-                  Subscribe
-                </button>
+                  Get Started
+                </Link>
+                <a 
+                  href="#how-it-works" 
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-primary-700 bg-white border-gray-200 hover:bg-gray-50"
+                >
+                  Learn More
+                </a>
               </div>
+            </div>
+            <div className="hidden md:block">
+              <div className="relative h-96 w-full rounded-2xl overflow-hidden bg-primary-100 shadow-xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary-300/30 to-primary-600/30"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="flex justify-center">
+                      <MessageSquare size={80} className="text-primary-600" />
+                    </div>
+                    <p className="mt-4 text-lg font-medium text-primary-800">Video Consultation Demo</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Features Section */}
+      <div id="how-it-works" className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900">How It Works</h2>
+            <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+              Our platform makes it easy to receive quality healthcare without leaving your home.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="p-6 border border-gray-100 rounded-xl bg-white shadow-sm hover:shadow-md transition duration-300">
+              <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center mb-4">
+                <Calendar className="h-6 w-6 text-primary-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Book Appointment</h3>
+              <p className="text-gray-600">
+                Schedule an appointment with our licensed healthcare professionals at your convenience.
+              </p>
+            </div>
+            
+            <div className="p-6 border border-gray-100 rounded-xl bg-white shadow-sm hover:shadow-md transition duration-300">
+              <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center mb-4">
+                <MessageSquare className="h-6 w-6 text-primary-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Video Consultation</h3>
+              <p className="text-gray-600">
+                Connect with doctors via secure video call for diagnosis, treatment, and advice.
+              </p>
+            </div>
+            
+            <div className="p-6 border border-gray-100 rounded-xl bg-white shadow-sm hover:shadow-md transition duration-300">
+              <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center mb-4">
+                <FileText className="h-6 w-6 text-primary-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Medical Records</h3>
+              <p className="text-gray-600">
+                Access your medical history, prescriptions, and treatment plans all in one place.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Benefits Section */}
+      <div className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900">Why Choose MedConsult?</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="flex gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary-100 flex-shrink-0 flex items-center justify-center">
+                <Shield className="h-6 w-6 text-primary-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2">Secure & Confidential</h3>
+                <p className="text-gray-600">
+                  Our platform uses end-to-end encryption to ensure all your communications and medical data remain private and secure.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary-100 flex-shrink-0 flex items-center justify-center">
+                <Users className="h-6 w-6 text-primary-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2">Licensed Professionals</h3>
+                <p className="text-gray-600">
+                  All our doctors are licensed, board-certified healthcare professionals with years of experience.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary-100 flex-shrink-0 flex items-center justify-center">
+                <Clock className="h-6 w-6 text-primary-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2">24/7 Availability</h3>
+                <p className="text-gray-600">
+                  Get medical consultation whenever you need it, with doctors available around the clock.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary-100 flex-shrink-0 flex items-center justify-center">
+                <FileText className="h-6 w-6 text-primary-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2">Comprehensive Care</h3>
+                <p className="text-gray-600">
+                  From routine check-ups to specialized consultations, we offer a wide range of healthcare services.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">MedConsult</h3>
+              <p className="text-sm text-gray-600">
+                A telemedicine platform enabling video consultations between doctors and patients with medical history tracking and appointment scheduling.
+              </p>
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase mb-4">Services</h3>
+              <ul className="space-y-3">
+                <li>
+                  <a href="#" className="text-sm text-gray-600 hover:text-primary-600">Video Consultations</a>
+                </li>
+                <li>
+                  <a href="#" className="text-sm text-gray-600 hover:text-primary-600">Appointment Scheduling</a>
+                </li>
+                <li>
+                  <a href="#" className="text-sm text-gray-600 hover:text-primary-600">Medical Records</a>
+                </li>
+                <li>
+                  <a href="#" className="text-sm text-gray-600 hover:text-primary-600">Prescriptions</a>
+                </li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase mb-4">Support</h3>
+              <ul className="space-y-3">
+                <li>
+                  <a href="#" className="text-sm text-gray-600 hover:text-primary-600">Help Center</a>
+                </li>
+                <li>
+                  <a href="#" className="text-sm text-gray-600 hover:text-primary-600">Contact Us</a>
+                </li>
+                <li>
+                  <a href="#" className="text-sm text-gray-600 hover:text-primary-600">Privacy Policy</a>
+                </li>
+                <li>
+                  <a href="#" className="text-sm text-gray-600 hover:text-primary-600">Terms of Service</a>
+                </li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase mb-4">Contact</h3>
+              <p className="text-sm text-gray-600 mb-2">
+                support@medconsult.com
+              </p>
+              <p className="text-sm text-gray-600">
+                +1 (555) 123-4567
+              </p>
             </div>
           </div>
           
-          <div className="mt-12 border-t border-gray-700 pt-8">
-            <p className="text-base text-gray-400 text-center">
-              &copy; 2023 MedConsult. All rights reserved.
+          <div className="mt-12 border-t border-gray-200 pt-8">
+            <p className="text-sm text-gray-600 text-center">
+              &copy; {new Date().getFullYear()} MedConsult. All rights reserved.
             </p>
           </div>
         </div>

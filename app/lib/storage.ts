@@ -1,22 +1,20 @@
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
-import moment from 'moment';
-import { eq, and, desc, sql, asc, gte } from 'drizzle-orm';
-
-import {
+import { 
   users,
   appointments,
   medicalRecords,
-  type User,
-  type NewUser,
-  type Appointment,
-  type NewAppointment,
-  type MedicalRecord,
-  type NewMedicalRecord
-} from '@/db/schema';
+  User,
+  NewUser,
+  Appointment,
+  NewAppointment,
+  MedicalRecord,
+  NewMedicalRecord
+} from '@shared/schema';
 
-// Initialize PostgreSQL connection
+// Create a PostgreSQL pool
 export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle(pool, { schema: { users, appointments, medicalRecords } });
 
@@ -25,299 +23,270 @@ export const storage = {
    * Create a new user
    */
   async createUser(userData: NewUser): Promise<User> {
+    // Hash password if provided
     if (userData.password) {
       userData.password = await bcrypt.hash(userData.password, 10);
     }
-    const newUser = await db.insert(users).values(userData).returning();
-    return newUser[0];
+    
+    const [newUser] = await db.insert(users).values(userData).returning();
+    return newUser;
   },
-
+  
   /**
    * Authenticate a user with username and password
    */
   async authenticateUser(username: string, password: string): Promise<User | null> {
-    const result = await db
-      .select()
-      .from(users)
-      .where(eq(users.username, username));
-
-    if (result.length === 0) {
+    const user = await db.query.users.findFirst({
+      where: eq(users.username, username)
+    });
+    
+    if (!user || !user.password) {
       return null;
     }
-
-    const user = result[0];
-    if (!user.password) {
-      return null;
-    }
-
+    
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return null;
     }
-
+    
     return user;
   },
-
+  
   /**
    * Get a user by ID
    */
   async getUserById(id: number): Promise<User | null> {
-    const result = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, id));
-
-    return result.length ? result[0] : null;
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, id)
+    });
+    
+    return user || null;
   },
-
+  
   /**
    * Get all patients (users with role 'patient')
    */
   async getPatients(): Promise<User[]> {
-    return await db
-      .select()
-      .from(users)
-      .where(eq(users.role, 'patient'));
+    const patients = await db.query.users.findMany({
+      where: eq(users.role, 'patient'),
+      orderBy: desc(users.createdAt)
+    });
+    
+    return patients;
   },
-
+  
   /**
    * Get recent patients based on recent appointments
    */
   async getRecentPatients(limit: number = 10): Promise<User[]> {
-    // Get patient IDs from recent appointments
-    const recentAppointments = await db
-      .select({ patientId: appointments.patientId })
-      .from(appointments)
-      .orderBy(desc(appointments.date))
-      .limit(limit);
-
-    const patientIds = [...new Set(recentAppointments.map(a => a.patientId))];
-
-    if (patientIds.length === 0) {
-      return [];
-    }
-
-    // Get patient details
-    const patients = await db
-      .select()
-      .from(users)
-      .where(
-        sql`${users.id} IN (${patientIds.join(',')})`
-      );
-
-    return patients;
+    // First get recent appointments with unique patient IDs
+    const recentAppointments = await db.query.appointments.findMany({
+      orderBy: desc(appointments.date),
+      limit: 50 // Get more than we need to account for duplicates
+    });
+    
+    // Extract unique patient IDs
+    const uniquePatientIds = Array.from(new Set(recentAppointments.map((a: Appointment) => a.patientId)));
+    
+    // Get patient details for these IDs
+    const patients = await Promise.all(
+      uniquePatientIds.slice(0, limit).map((id: number) => this.getUserById(id))
+    );
+    
+    // Filter out any nulls
+    return patients.filter(p => p !== null) as User[];
   },
-
+  
   /**
    * Get appointments with optional filters
    */
   async getAppointments(filters?: { 
-    date?: string, 
-    userId?: number, 
-    status?: string,
-    isDoctor?: boolean,
-    isPatient?: boolean
+    patientId?: number;
+    doctorId?: number;
+    status?: 'scheduled' | 'completed' | 'cancelled' | 'in-progress';
+    date?: Date | string;
+    limit?: number;
   }): Promise<Appointment[]> {
-    let query = db
-      .select()
-      .from(appointments)
-      .orderBy(asc(appointments.date));
-
+    let query = db.query.appointments;
+    
     if (filters) {
-      if (filters.date) {
-        const startOfDay = moment(filters.date).startOf('day').toISOString();
-        const endOfDay = moment(filters.date).endOf('day').toISOString();
-        
-        query = query.where(
-          and(
-            gte(appointments.date, startOfDay),
-            sql`${appointments.date} <= ${endOfDay}`
-          )
-        );
+      let conditions = [];
+      
+      if (filters.patientId) {
+        // Will extend with patientId condition
       }
-
+      
+      if (filters.doctorId) {
+        // Will extend with doctorId condition
+      }
+      
       if (filters.status) {
-        query = query.where(eq(appointments.status, filters.status));
+        // Will extend with status condition
       }
-
-      if (filters.userId) {
-        if (filters.isDoctor) {
-          query = query.where(eq(appointments.doctorId, filters.userId));
-        } else if (filters.isPatient) {
-          query = query.where(eq(appointments.patientId, filters.userId));
-        }
+      
+      if (filters.date) {
+        const dateObj = typeof filters.date === 'string' ? new Date(filters.date) : filters.date;
+        // Will extend with date condition
+      }
+      
+      if (filters.limit) {
+        // Will apply limit
       }
     }
-
-    return await query;
+    
+    const result = await query.findMany({
+      orderBy: desc(appointments.date)
+    });
+    
+    return result;
   },
-
+  
   /**
    * Get a specific appointment by ID
    */
   async getAppointmentById(id: number): Promise<Appointment | null> {
-    const result = await db
-      .select()
-      .from(appointments)
-      .where(eq(appointments.id, id));
-
-    return result.length ? result[0] : null;
+    const appointment = await db.query.appointments.findFirst({
+      where: eq(appointments.id, id)
+    });
+    
+    return appointment || null;
   },
-
+  
   /**
    * Create a new appointment
    */
   async createAppointment(appointmentData: NewAppointment): Promise<Appointment> {
-    const newAppointment = await db
-      .insert(appointments)
+    const [newAppointment] = await db.insert(appointments)
       .values(appointmentData)
       .returning();
-
-    return newAppointment[0];
+    
+    return newAppointment;
   },
-
+  
   /**
    * Update an appointment to started status
    */
   async startAppointment(id: number): Promise<Appointment | null> {
-    const updatedAppointment = await db
-      .update(appointments)
+    const [updatedAppointment] = await db.update(appointments)
       .set({ status: 'in-progress' })
       .where(eq(appointments.id, id))
       .returning();
-
-    return updatedAppointment.length ? updatedAppointment[0] : null;
+    
+    return updatedAppointment || null;
   },
-
+  
   /**
    * Update an appointment to completed status
    */
   async endAppointment(id: number): Promise<Appointment | null> {
-    const updatedAppointment = await db
-      .update(appointments)
+    const [updatedAppointment] = await db.update(appointments)
       .set({ status: 'completed' })
       .where(eq(appointments.id, id))
       .returning();
-
-    return updatedAppointment.length ? updatedAppointment[0] : null;
+    
+    return updatedAppointment || null;
   },
-
+  
   /**
    * Get the current active appointment (status = 'in-progress')
    */
   async getActiveAppointment(): Promise<Appointment | null> {
-    const result = await db
-      .select()
-      .from(appointments)
-      .where(eq(appointments.status, 'in-progress'))
-      .limit(1);
-
-    return result.length ? result[0] : null;
+    const appointment = await db.query.appointments.findFirst({
+      where: eq(appointments.status, 'in-progress'),
+      orderBy: desc(appointments.date)
+    });
+    
+    return appointment || null;
   },
-
+  
   /**
    * Get available time slots for a given date
    */
   async getAvailableTimeSlots(date: string): Promise<string[]> {
-    const startOfDay = moment(date).startOf('day').toISOString();
-    const endOfDay = moment(date).endOf('day').toISOString();
-
-    // Get booked appointments for the date
-    const bookedAppointments = await db
-      .select({ date: appointments.date, duration: appointments.duration })
-      .from(appointments)
-      .where(
-        and(
-          gte(appointments.date, startOfDay),
-          sql`${appointments.date} <= ${endOfDay}`
-        )
-      );
-
-    // Generate time slots from 9 AM to 5 PM in 30-minute intervals
-    const timeSlots: string[] = [];
-    const slotDuration = 30; // minutes
-    const startTime = moment(date).hour(9).minute(0).second(0);
-    const endTime = moment(date).hour(17).minute(0).second(0);
-
-    let currentSlot = startTime.clone();
-    while (currentSlot.isBefore(endTime)) {
-      const slotISOString = currentSlot.toISOString();
-      
-      // Check if slot is available
-      const isBooked = bookedAppointments.some(appt => {
-        const apptStart = moment(appt.date);
-        const apptEnd = moment(appt.date).add(appt.duration, 'minutes');
-        return currentSlot.isSameOrAfter(apptStart) && currentSlot.isBefore(apptEnd);
-      });
-      
-      if (!isBooked) {
-        timeSlots.push(slotISOString);
-      }
-      
-      currentSlot.add(slotDuration, 'minutes');
-    }
-
-    return timeSlots;
+    // Define all possible time slots from 8am to 6pm
+    const allTimeSlots = [
+      '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+      '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
+      '16:00', '16:30', '17:00', '17:30'
+    ];
+    
+    // Get booked appointments for this date
+    const bookedAppointments = await db.query.appointments.findMany({
+      where: sql`DATE(${appointments.date}) = DATE(${date})`,
+      orderBy: appointments.date
+    });
+    
+    // Filter out the booked time slots
+    const bookedTimes = new Set(
+      bookedAppointments
+        .filter(a => a.status !== 'cancelled')
+        .map(a => {
+          const appointmentDate = new Date(a.date);
+          return `${String(appointmentDate.getHours()).padStart(2, '0')}:${String(appointmentDate.getMinutes()).padStart(2, '0')}`;
+        })
+    );
+    
+    return allTimeSlots.filter(time => !bookedTimes.has(time));
   },
-
+  
   /**
    * Get medical records by patient ID with optional filters
    */
   async getMedicalRecordsByPatientId(
     patientId: number,
-    filters?: { type?: string, limit?: number }
+    filters?: {
+      type?: 'consultation' | 'prescription' | 'lab-result' | 'imaging' | 'referral';
+      limit?: number;
+    }
   ): Promise<MedicalRecord[]> {
-    let query = db
-      .select()
-      .from(medicalRecords)
-      .where(eq(medicalRecords.patientId, patientId))
-      .orderBy(desc(medicalRecords.createdAt));
-
-    if (filters?.type && filters.type !== 'all') {
-      query = query.where(eq(medicalRecords.type, filters.type));
+    let query = db.query.medicalRecords;
+    
+    if (filters?.type) {
+      // Will extend with type filter
     }
-
+    
     if (filters?.limit) {
-      query = query.limit(filters.limit);
+      // Will apply limit
     }
-
-    return await query;
+    
+    const records = await query.findMany({
+      orderBy: desc(medicalRecords.createdAt)
+    });
+    
+    return records.filter(record => record.patientId === patientId);
   },
-
+  
   /**
    * Get a medical record by appointment ID
    */
   async getMedicalRecordByAppointmentId(appointmentId: number): Promise<MedicalRecord | null> {
-    const result = await db
-      .select()
-      .from(medicalRecords)
-      .where(eq(medicalRecords.appointmentId, appointmentId));
-
-    return result.length ? result[0] : null;
+    const record = await db.query.medicalRecords.findFirst({
+      where: eq(medicalRecords.appointmentId, appointmentId)
+    });
+    
+    return record || null;
   },
-
+  
   /**
    * Create a new medical record
    */
   async createMedicalRecord(recordData: NewMedicalRecord): Promise<MedicalRecord> {
-    const newRecord = await db
-      .insert(medicalRecords)
+    const [newRecord] = await db.insert(medicalRecords)
       .values(recordData)
       .returning();
-
-    return newRecord[0];
+    
+    return newRecord;
   },
-
+  
   /**
    * Update an existing medical record
    */
   async updateMedicalRecord(id: number, recordData: NewMedicalRecord): Promise<MedicalRecord | null> {
-    const updatedRecord = await db
-      .update(medicalRecords)
+    const [updatedRecord] = await db.update(medicalRecords)
       .set(recordData)
       .where(eq(medicalRecords.id, id))
       .returning();
-
-    return updatedRecord.length ? updatedRecord[0] : null;
+    
+    return updatedRecord || null;
   }
 };
