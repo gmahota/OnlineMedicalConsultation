@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 // Set the PORT environment variable to 5000 for Replit compatibility
-process.env.PORT = process.env.PORT || '5000';
+process.env.PORT = '5000';
+
+// Log the port configuration
+console.log('Next.js configured to run on PORT:', process.env.PORT);
 
 const nextConfig = {
   // Configure Next.js for optimizations
@@ -22,8 +25,9 @@ const nextConfig = {
   // Enable experimental features
   experimental: {
     serverActions: {
-      allowedOrigins: ['localhost:3000', 'localhost:5000', '0.0.0.0:5000'],
+      allowedOrigins: ['localhost:3000', 'localhost:5000', '0.0.0.0:5000', '*.replit.dev', '*.repl.co'],
     },
+    allowedDevOrigins: ['*.replit.dev', '*.repl.co', 'localhost:3000', 'localhost:5000', '0.0.0.0:5000'],
   },
   
   // Environment variables
@@ -31,7 +35,7 @@ const nextConfig = {
     DATABASE_URL: process.env.DATABASE_URL,
   },
   
-  // Server configuration
+  // CORS configuration for Replit
   async headers() {
     return [
       {
@@ -49,6 +53,19 @@ const nextConfig = {
             key: 'X-XSS-Protection',
             value: '1; mode=block',
           },
+          // Allow requests from Replit domains
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'X-Requested-With, Content-Type, Authorization',
+          },
         ],
       },
     ];
@@ -65,6 +82,11 @@ const nextConfig = {
         {
           source: '/api/:path*',
           destination: '/api/:path*',
+        },
+        // WebSocket rewrite for video consultations
+        {
+          source: '/ws',
+          destination: '/ws',
         },
       ],
       fallback: [],

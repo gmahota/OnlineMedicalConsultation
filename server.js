@@ -1,40 +1,66 @@
-// Immediate server for port 5000 to satisfy Replit's requirements
-// This very simple server opens port 5000 immediately
-
+// Production-ready port forwarding for Replit
+// Forwards requests from port 5000 (Replit) to port 3000 (Next.js)
 const http = require('http');
+const httpProxy = require('http-proxy');
 const { spawn } = require('child_process');
 
-// Create a very simple HTTP server that responds to all requests
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/html' });
-  res.end(`
-    <html>
-      <head>
-        <title>Medical Consultation App</title>
-        <meta http-equiv="refresh" content="3;url=/">
-        <style>
-          body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-          .loader { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 2s linear infinite; margin: 20px auto; }
-          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        </style>
-      </head>
-      <body>
-        <h1>Medical Consultation App</h1>
-        <p>Next.js application starting up...</p>
-        <div class="loader"></div>
-        <p>You will be redirected to the application shortly.</p>
-      </body>
-    </html>
-  `);
+// Print startup message
+console.log('Starting Replit port forwarding service...');
+
+// Create a proxy server with custom error handling
+const proxy = httpProxy.createProxyServer({
+  target: 'http://localhost:3000',
+  ws: true,
+  changeOrigin: true
 });
 
-// Start the server on port 5000
-server.listen(5000, '0.0.0.0', () => {
-  console.log('Server running on port 5000');
+// Handle errors in the proxy to prevent crashes
+proxy.on('error', (err, req, res) => {
+  console.error('Proxy error:', err);
   
-  // Start Next.js in the background
-  console.log('Starting Next.js application...');
-  const nextApp = spawn('npm', ['run', 'dev'], {
-    stdio: 'inherit'
+  // Only end the response if it hasn't been sent yet
+  if (res && !res.headersSent && res.writeHead) {
+    res.writeHead(500, { 'Content-Type': 'text/plain' });
+    res.end('Proxy error: Unable to connect to Next.js application');
+  }
+});
+
+// Create HTTP server that forwards all traffic to Next.js
+const server = http.createServer((req, res) => {
+  // Print request info (useful for debugging)
+  console.log(`Forwarding: ${req.method} ${req.url}`);
+  
+  // Forward the request to Next.js
+  proxy.web(req, res);
+});
+
+// Handle WebSocket connections (needed for HMR)
+server.on('upgrade', (req, socket, head) => {
+  console.log(`WebSocket upgrade: ${req.url}`);
+  proxy.ws(req, socket, head);
+});
+
+// Open port 5000 immediately (required by Replit)
+server.listen(5000, '0.0.0.0', () => {
+  console.log('✅ PORT 5000 OPEN - Forwarding to Next.js on port 3000');
+  
+  // Start Next.js in a separate process
+  const nextProcess = spawn('npm', ['run', 'dev'], {
+    stdio: 'inherit',
+    env: { ...process.env, PORT: 3000 }
+  });
+  
+  // Handle Next.js process termination
+  nextProcess.on('exit', (code) => {
+    console.log(`Next.js process exited with code ${code}`);
+    process.exit(code || 0);
+  });
+  
+  // Handle this process termination
+  process.on('SIGINT', () => {
+    console.log('Shutting down...');
+    nextProcess.kill();
+    server.close();
+    process.exit(0);
   });
 });
