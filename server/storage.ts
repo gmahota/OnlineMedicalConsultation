@@ -111,28 +111,17 @@ export const storage = {
     if (filters) {
       // Date-based filtering
       if (filters.date) {
-        const date = moment(filters.date, 'YYYY-MM-DD');
-        const startOfDayStr = date.startOf('day').format();
-        const endOfDayStr = date.endOf('day').format();
-        
+        // Convert date string to a SQL date range
+        const sql_date = filters.date;
         query = query.where(
-          between(
-            appointments.date, 
-            startOfDayStr,
-            endOfDayStr
-          )
+          sql`DATE(${appointments.date}) = ${sql_date}`
         );
       } else if (filters.month) {
         const [year, month] = filters.month.split('-').map(Number);
-        const startDate = moment().year(year).month(month - 1).startOf('month');
-        const endDate = moment().year(year).month(month - 1).endOf('month');
+        const month_str = month < 10 ? `0${month}` : `${month}`;
         
         query = query.where(
-          between(
-            appointments.date, 
-            startDate.format(),
-            endDate.format()
-          )
+          sql`EXTRACT(YEAR FROM ${appointments.date}) = ${year} AND EXTRACT(MONTH FROM ${appointments.date}) = ${month}`
         );
       }
       

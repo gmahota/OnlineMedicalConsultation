@@ -199,8 +199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get(`${apiPrefix}/appointments/today`, async (req, res) => {
     try {
-      const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];
+      const todayStr = moment().format('YYYY-MM-DD');
       const appointments = await storage.getAppointments({ date: todayStr });
       res.status(200).json(appointments);
     } catch (error) {

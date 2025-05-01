@@ -1,5 +1,5 @@
 import { Link } from 'wouter';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
 import { queryClient } from '@/lib/queryClient';
@@ -117,8 +117,8 @@ const AppointmentCard = ({ appointment }: AppointmentCardProps) => {
         </span>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-        <Link href={`/patient/${appointment.patientId}`}>
-          <a className="text-primary-700 hover:text-primary-900 mr-3">View</a>
+        <Link href={`/patient/${appointment.patientId}`} className="text-primary-700 hover:text-primary-900 mr-3">
+          View
         </Link>
         {isConfirmed ? (
           <Button
