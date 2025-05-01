@@ -1,3 +1,3 @@
 #!/bin/bash
-# This script starts our custom server for Replit compatibility
-node server.js
+# Run the initialization script that ensures port 5000 opens immediately
+node init-app.js
