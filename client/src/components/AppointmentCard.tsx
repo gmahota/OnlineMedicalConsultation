@@ -1,4 +1,4 @@
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
@@ -19,13 +19,14 @@ const AppointmentCard = ({ appointment }: AppointmentCardProps) => {
   });
   
   // Start consultation mutation
+  const [, navigate] = useLocation();
   const startConsultationMutation = useMutation({
     mutationFn: () => {
       return apiRequest("PATCH", `/api/appointments/${appointment.id}/start`, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
-      window.location.href = `/consultation/${appointment.id}`;
+      navigate(`/consultation/${appointment.id}`);
     },
     onError: (error) => {
       toast({

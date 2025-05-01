@@ -77,14 +77,11 @@ const Dashboard = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Active Consultation</h3>
               <div>
-                <Button 
-                  variant="default" 
-                  onClick={() => {
-                    window.location.href = `/consultation/${activeConsultation.id}`;
-                  }}
-                >
-                  Go to Consultation
-                </Button>
+                <Link href={`/consultation/${activeConsultation.id}`}>
+                  <Button variant="default">
+                    Go to Consultation
+                  </Button>
+                </Link>
               </div>
             </div>
             
@@ -127,8 +124,8 @@ const Dashboard = () => {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Upcoming Appointments</h3>
-          <Link href="/appointments">
-            <a className="text-sm text-primary-700 hover:underline">View all</a>
+          <Link href="/appointments" className="text-sm text-primary-700 hover:underline">
+            View all
           </Link>
         </div>
         
@@ -170,8 +167,8 @@ const Dashboard = () => {
         <Card className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Recent Patients</h3>
-            <Link href="/patients">
-              <a className="text-sm text-primary-700 hover:underline">View all</a>
+            <Link href="/patients" className="text-sm text-primary-700 hover:underline">
+              View all
             </Link>
           </div>
           

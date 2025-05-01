@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { initializeWebRTC, setupLocalStream, setupPeerConnection } from '@/lib/webrtc';
-import { connectToSocket, listenForSignaling, sendSignalingMessage } from '@/lib/socket';
+import { connectToSocket, listenForSignaling, sendSignalingMessage, registerIceCandidateEvent } from '@/lib/socket';
 
 interface VideoCallProps {
   appointmentId: number;
@@ -49,6 +49,9 @@ const VideoCall = ({ appointmentId, isAudioEnabled, isVideoEnabled }: VideoCallP
         // Listen for signaling messages
         listenForSignaling(socket, rtcPeerConnection);
         
+        // Register ICE candidate event
+        registerIceCandidateEvent(rtcPeerConnection, socket, appointmentId.toString());
+        
         // Send initial offer if we're the doctor
         // In a real app, we'd determine if the current user is the doctor
         const isDoctor = true;
@@ -80,7 +83,7 @@ const VideoCall = ({ appointmentId, isAudioEnabled, isVideoEnabled }: VideoCallP
     };
     
     setupCall();
-  }, [appointmentId]);
+  }, [appointmentId, isAudioEnabled, isVideoEnabled, toast]);
   
   // Update audio/video tracks when enabled state changes
   useEffect(() => {
