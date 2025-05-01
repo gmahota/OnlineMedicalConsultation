@@ -1,0 +1,83 @@
+Product Requirements Document (PRD): Online Medical Consultation App
+1. Overview
+A web-based medical platform to enable online video consultations between doctors and patients, with integrated video calls, patient history tracking, and appointment scheduling.
+
+2. Objectives
+Enable secure, real-time video consultations via browser.
+
+Maintain comprehensive medical records for each patient.
+
+Facilitate appointment booking with reminders.
+
+Prioritize ease of use, data security, and scalability.
+
+3. Target Users
+Patients seeking remote medical consultations.
+
+Independent doctors and clinics offering telemedicine.
+
+4. Core Features
+4.1 Video Consultation
+Embedded video call interface using WebRTC (or Daily/LiveKit).
+
+Camera, microphone, and screen sharing support.
+
+Note-taking sidebar for doctors during consultation.
+
+Chat component for text messages.
+
+Optional consultation timer.
+
+4.2 Patient Medical History
+Timeline view of past consultations.
+
+Secure access to doctor’s notes, prescriptions, and reports.
+
+Optional document upload (PDFs, images).
+
+4.3 Appointment Scheduling
+Calendar-based interface to pick available slots.
+
+Email and/or WhatsApp reminders (optional).
+
+Manual or auto-confirmation by doctors.
+
+5. UI/UX Components (ShadCN)
+Card components for patient info.
+
+Calendar for scheduling.
+
+Dialog for joining or ending calls.
+
+Tabs to switch between notes/history.
+
+Textarea with autosave for doctor notes.
+
+Badge for consultation status.
+
+Avatar for doctor/patient profile photo.
+
+6. Tech Stack Suggestions
+Frontend: Next.js (App Router), Tailwind CSS, shadcn/ui
+
+Video Engine: WebRTC / Daily / LiveKit
+
+Auth: Clerk or NextAuth.js
+
+Data: Prisma ORM (PostgreSQL or SQLite)
+
+Notifications: Email (SMTP) + WhatsApp API
+
+7. Security
+Role-based access: Patient / Doctor / Admin
+
+End-to-end encryption for video and data
+
+GDPR or local equivalent compliance
+
+8. Success Metrics
+Number of monthly consultations
+
+Average wait time from booking to consultation
+
+Patient satisfaction and retention rate
