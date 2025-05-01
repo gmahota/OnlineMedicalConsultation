@@ -52,17 +52,33 @@ const VideoCall = ({ appointmentId, isAudioEnabled, isVideoEnabled }: VideoCallP
         // Register ICE candidate event
         registerIceCandidateEvent(rtcPeerConnection, socket, appointmentId.toString());
         
-        // Send initial offer if we're the doctor
-        // In a real app, we'd determine if the current user is the doctor
-        const isDoctor = true;
+        // Determine if the current user is a doctor (based on URL or session)
+        // In a real app with authentication, we would check the user's role from the session
+        // For demo purposes, we can use the URL to determine the role
+        const isDoctor = window.location.pathname.includes('doctor') || 
+                        localStorage.getItem('userRole') === 'doctor';
+        
+        // Send initial offer if we're the doctor to initiate the call
         if (isDoctor) {
-          const offer = await rtcPeerConnection.createOffer();
-          await rtcPeerConnection.setLocalDescription(offer);
-          sendSignalingMessage(socket, {
-            type: 'offer',
-            sdp: offer,
-            appointmentId: appointmentId
-          });
+          try {
+            const offer = await rtcPeerConnection.createOffer();
+            await rtcPeerConnection.setLocalDescription(offer);
+            sendSignalingMessage(socket, {
+              type: 'offer',
+              sdp: offer,
+              appointmentId: appointmentId
+            });
+            console.log('Sent initial offer as doctor');
+          } catch (error) {
+            console.error('Error creating/sending offer:', error);
+            toast({
+              title: "Connection Error",
+              description: "Failed to initiate the call. Please try refreshing the page.",
+              variant: "destructive",
+            });
+          }
+        } else {
+          console.log('Waiting for doctor to initiate the call');
         }
         
         return () => {
@@ -101,22 +117,39 @@ const VideoCall = ({ appointmentId, isAudioEnabled, isVideoEnabled }: VideoCallP
   return (
     <div className="h-full relative">
       {/* Main Video (Patient/Remote) */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        {isConnecting && !isConnected && (
+      <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+        {isConnecting && !isConnected ? (
           <div className="text-white text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mb-4"></div>
             <p>Connecting to the consultation...</p>
+            <p className="text-sm text-slate-400 mt-2">Please make sure your camera and microphone are enabled</p>
+          </div>
+        ) : !isConnected && (
+          <div className="text-white text-center p-4">
+            <div className="bg-red-900/50 p-4 rounded-lg mb-4">
+              <p className="font-medium">Could not establish connection</p>
+              <p className="text-sm text-slate-300 mt-2">
+                The other participant may not have joined yet or there might be connection issues.
+              </p>
+            </div>
+            <button 
+              onClick={() => window.location.reload()}
+              className="bg-primary-700 hover:bg-primary-800 text-white px-4 py-2 rounded-md"
+            >
+              Retry Connection
+            </button>
           </div>
         )}
+        
         <video
           ref={remoteVideoRef}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover ${!isConnected ? 'opacity-0' : 'opacity-100'}`}
           autoPlay
           playsInline
         />
       </div>
       
-      {/* Doctor's video (small overlay) */}
+      {/* Local video (small overlay) */}
       <div className="absolute bottom-4 right-4 w-48 h-36 rounded-lg overflow-hidden shadow-lg border-2 border-white">
         <video
           ref={localVideoRef}
@@ -125,6 +158,11 @@ const VideoCall = ({ appointmentId, isAudioEnabled, isVideoEnabled }: VideoCallP
           playsInline
           muted
         />
+        {!isVideoEnabled && (
+          <div className="absolute inset-0 bg-slate-800 flex items-center justify-center">
+            <p className="text-white text-xs">Camera Off</p>
+          </div>
+        )}
       </div>
     </div>
   );

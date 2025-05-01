@@ -22,7 +22,13 @@ export const setupLocalStream = async (video: boolean, audio: boolean): Promise<
       video: video ? { width: 640, height: 480 } : false
     };
     
-    return await navigator.mediaStream.getUserMedia(constraints);
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      return await navigator.mediaDevices.getUserMedia(constraints);
+    } else if (navigator.mediaStream && navigator.mediaStream.getUserMedia) {
+      return await navigator.mediaStream.getUserMedia(constraints);
+    } else {
+      throw new Error('getUserMedia is not supported in this browser');
+    }
   } catch (error) {
     console.error('Error accessing media devices:', error);
     

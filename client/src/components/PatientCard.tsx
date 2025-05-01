@@ -21,8 +21,8 @@ const PatientCard = ({ patient, lastVisit }: PatientCardProps) => {
           Last visit: {lastVisit ? format(lastVisit, 'PP') : 'No recent visits'}
         </p>
       </div>
-      <Link href={`/patient/${patient.id}`}>
-        <a className="text-sm text-primary-700 hover:text-primary-800">View</a>
+      <Link href={`/patient/${patient.id}`} className="text-sm text-primary-700 hover:text-primary-800">
+        View
       </Link>
     </div>
   );
